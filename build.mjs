@@ -17,11 +17,13 @@ await copyFile(join(root, '.openai', 'hosting.json'), join(dist, '.openai', 'hos
 await mkdir(join(dist, 'server'), { recursive: true });
 await writeFile(
   join(dist, 'server', 'index.js'),
-  `export default async function handler() {
-  return new Response('ThicMobKai Converter is running.', {
-    headers: { 'content-type': 'text/plain; charset=utf-8' },
-  });
-}
+  `export default {
+  async fetch() {
+    return new Response('ThicMobKai Converter is running.', {
+      headers: { 'content-type': 'text/plain; charset=utf-8' },
+    });
+  },
+};
 `,
   'utf8',
 );
