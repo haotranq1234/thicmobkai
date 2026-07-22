@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ThicMobKai Converter</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">ThicMobKai · Pack Converter</p>
+          <h1>Quăng pack MythicMobs + ModelEngine 4 vào đây, mình chuyển sang ThicMobKai.</h1>
+          <p class="lede">
+            Công cụ v1 cho pack `.zip`: quét mob, boss, model, skill, rồi sinh ra cấu hình ThicMobKai kèm báo lỗi thường gặp.
+          </p>
+        </div>
+        <div class="hero-card">
+          <div class="stat">
+            <span>Hỗ trợ</span>
+            <strong>MythicMobs</strong>
+            <small>+ ModelEngine 4</small>
+          </div>
+          <div class="stat">
+            <span>Xuất ra</span>
+            <strong>mobs.yml</strong>
+            <small>bosses.yml · skills.yml</small>
+          </div>
+          <div class="stat">
+            <span>Chế độ sửa lỗi</span>
+            <strong>Heuristic Fix</strong>
+            <small>gợi ý sửa config hỏng</small>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="panel upload">
+          <h2>1. Tải pack</h2>
+          <p>Kéo thả file `.zip` của bạn vào đây. Có thể đổi tên file, công cụ sẽ quét nội dung bên trong.</p>
+          <label id="dropzone" class="dropzone" for="file-input">
+            <input id="file-input" type="file" accept=".zip" />
+            <span class="drop-title">Thả pack vào đây</span>
+            <span class="drop-sub">hoặc bấm để chọn file .zip</span>
+          </label>
+          <div class="actions">
+            <button id="scan-btn" class="primary">Quét pack</button>
+            <button id="export-btn" class="ghost" disabled>Xuất config</button>
+          </div>
+          <div class="hint">
+            <strong>Ghi chú:</strong> bản v1 chạy tốt nhất với `.zip`. Mình có thể nâng cấp tiếp để hỗ trợ `.rar` và sửa sâu hơn nếu bạn muốn.
+          </div>
+        </article>
+
+        <article class="panel">
+          <h2>2. Báo cáo</h2>
+          <div id="report" class="report empty">
+            Chưa có pack nào được quét.
+          </div>
+        </article>
+
+        <article class="panel">
+          <h2>3. Cấu hình xuất ra</h2>
+          <div class="tabs">
+            <button class="tab active" data-target="thicmob">ThicMobKai</button>
+            <button class="tab" data-target="fixes">Sửa lỗi</button>
+            <button class="tab" data-target="raw">Raw scan</button>
+          </div>
+          <textarea id="output" spellcheck="false" readonly></textarea>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>
