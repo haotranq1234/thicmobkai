@@ -5,15 +5,100 @@ const exportBtn = document.getElementById('export-btn');
 const report = document.getElementById('report');
 const output = document.getElementById('output');
 const tabs = [...document.querySelectorAll('.tab')];
+const pageTabs = [...document.querySelectorAll('.page-tab')];
+const pagePanels = [...document.querySelectorAll('[data-page-panel]')];
+const sbType = document.getElementById('sb-type');
+const sbBoard = document.getElementById('sb-board');
+const sbRegion = document.getElementById('sb-region');
+const sbWorld = document.getElementById('sb-world');
+const sbPriority = document.getElementById('sb-priority');
+const sbTitle = document.getElementById('sb-title');
+const sbX1 = document.getElementById('sb-x1');
+const sbY1 = document.getElementById('sb-y1');
+const sbZ1 = document.getElementById('sb-z1');
+const sbX2 = document.getElementById('sb-x2');
+const sbY2 = document.getElementById('sb-y2');
+const sbZ2 = document.getElementById('sb-z2');
+const sbGenerateBtn = document.getElementById('sb-generate');
+const sbCopyBtn = document.getElementById('sb-copy');
+const sbOutput = document.getElementById('sb-output');
+const sbReport = document.getElementById('sb-report');
+const regionPresets = document.getElementById('region-presets');
 
 let selectedFile = null;
 let scanState = null;
 let currentTab = 'thicmob';
 let splitFileSelect = null;
 let splitFilePreview = null;
+let currentPage = 'converter';
 
 const ZIP_URL = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm';
 const THICMOB_SUPPORTED_TRIGGERS = ['on-spawn', 'on-damage', 'on-attack', 'custom'];
+const SERVERBOARD_PRESETS = {
+  dungeon: {
+    label: 'Dungeon',
+    board: 'dungeon',
+    region: 'dungeon_01',
+    world: 'world',
+    priority: 20,
+    title: '&6♜ &eDungeon',
+    hookLine: '&7Board riêng cho khu dungeon, ưu tiên hiển thị boss, đợt quái và phần thưởng.',
+  },
+  boss: {
+    label: 'Boss',
+    board: 'boss',
+    region: 'boss_01',
+    world: 'world',
+    priority: 30,
+    title: '&c✦ &fBoss Area',
+    hookLine: '&7Board riêng cho boss, hiển thị tên boss, máu và top damage.',
+  },
+  worldboss: {
+    label: 'Boss thế giới',
+    board: 'worldboss',
+    region: 'worldboss_01',
+    world: 'world',
+    priority: 40,
+    title: '&4☠ &fWorld Boss',
+    hookLine: '&7Board riêng cho boss thế giới, ưu tiên top dame và trạng thái còn sống.',
+  },
+  farm: {
+    label: 'Khu farm',
+    board: 'farm',
+    region: 'farm_01',
+    world: 'world',
+    priority: 15,
+    title: '&a✿ &fKhu Farm',
+    hookLine: '&7Board cho bãi farm, hiển thị mob, exp, vật phẩm và tiến trình.',
+  },
+  spawn: {
+    label: 'Spawn',
+    board: 'default',
+    region: 'spawn_01',
+    world: 'world',
+    priority: 10,
+    title: '&d✿ &fKhu Khởi Sinh',
+    hookLine: '&7Board chung cho người chơi, tiền, xu và thông tin server.',
+  },
+  trade: {
+    label: 'Trade',
+    board: 'trade',
+    region: 'trade_01',
+    world: 'world',
+    priority: 12,
+    title: '&b✦ &fTrade Dungeon',
+    hookLine: '&7Board cho khu đổi đồ, kho báu và cửa hàng trao đổi.',
+  },
+  custom: {
+    label: 'Tự chọn',
+    board: 'custom',
+    region: 'custom_01',
+    world: 'world',
+    priority: 20,
+    title: '&f✦ &7Khu Tùy Chỉnh',
+    hookLine: '&7Board tùy chỉnh theo cấu hình của bạn.',
+  },
+};
 
 tabs.forEach((tab) => {
   tab.addEventListener('click', () => {
@@ -23,6 +108,16 @@ tabs.forEach((tab) => {
     renderSplitPreview();
   });
 });
+
+pageTabs.forEach((tab) => {
+  tab.addEventListener('click', () => {
+    pageTabs.forEach((btn) => btn.classList.toggle('active', btn === tab));
+    currentPage = tab.dataset.page;
+    pagePanels.forEach((panel) => panel.classList.toggle('hidden', panel.dataset.pagePanel !== currentPage));
+  });
+});
+
+pagePanels.forEach((panel) => panel.classList.toggle('hidden', panel.dataset.pagePanel !== currentPage));
 
 dropzone.addEventListener('dragover', (event) => {
   event.preventDefault();
@@ -82,6 +177,40 @@ exportBtn.addEventListener('click', () => {
   a.download = `thicmobkai-${currentTab}.txt`;
   a.click();
   URL.revokeObjectURL(url);
+});
+
+if (regionPresets) renderRegionPresetButtons();
+if (sbType) {
+  sbType.addEventListener('change', () => {
+    const preset = serverboardPreset(sbType.value);
+    if (sbType.value !== 'custom') {
+      sbBoard.value = preset.board;
+      sbRegion.value = preset.region;
+      sbWorld.value = preset.world;
+      sbPriority.value = preset.priority;
+      sbTitle.value = preset.title;
+    }
+    renderServerboardOutput();
+  });
+}
+
+for (const field of [sbBoard, sbRegion, sbWorld, sbPriority, sbTitle, sbX1, sbY1, sbZ1, sbX2, sbY2, sbZ2]) {
+  field?.addEventListener('input', renderServerboardOutput);
+}
+
+sbGenerateBtn?.addEventListener('click', () => renderServerboardOutput());
+sbCopyBtn?.addEventListener('click', async () => {
+  const text = sbOutput?.value || '';
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    sbReport.classList.remove('empty');
+    sbReport.innerHTML = '<div class="good">Đã copy YAML vào clipboard.</div>';
+  } catch {
+    sbOutput?.focus();
+    sbOutput?.select();
+    document.execCommand('copy');
+  }
 });
 
 function setFile(file) {
@@ -194,6 +323,192 @@ function yamlScalar(value) {
   if (/^(true|false|null)$/i.test(text)) return text.toLowerCase();
   if (/^-?\d+(\.\d+)?$/.test(text)) return text;
   return `"${text.replace(/"/g, '\\"')}"`;
+}
+
+function serverboardPreset(type) {
+  return SERVERBOARD_PRESETS[type] || SERVERBOARD_PRESETS.custom;
+}
+
+function setServerboardFields(type) {
+  const preset = serverboardPreset(type);
+  sbType.value = type;
+  sbBoard.value = preset.board;
+  sbRegion.value = preset.region;
+  sbWorld.value = preset.world;
+  sbPriority.value = preset.priority;
+  sbTitle.value = preset.title;
+  renderServerboardOutput();
+}
+
+function renderRegionPresetButtons() {
+  if (!regionPresets) return;
+  regionPresets.innerHTML = Object.entries(SERVERBOARD_PRESETS)
+    .map(([type, preset]) => `
+      <button class="preset-chip" data-preset="${type}">
+        <strong>${preset.label}</strong>
+        <small>${preset.hookLine}</small>
+      </button>
+    `)
+    .join('');
+  regionPresets.querySelectorAll('[data-preset]').forEach((button) => {
+    button.addEventListener('click', () => setServerboardFields(button.dataset.preset));
+  });
+}
+
+function serverboardLines(type, values) {
+  const common = [
+    '&8&m--------------------',
+    '',
+    `&f☵ Khu`,
+    `&7• &f${values.region}`,
+    '',
+    `&f♜ Board`,
+    `&7• &a${values.board}`,
+    '',
+  ];
+
+  const blocks = {
+    dungeon: [
+      '&f♕ Thông tin',
+      '&7• &eHiển thị đợt quái, boss và tiến trình vượt ải.',
+      '',
+      '&f⌛ Ghi chú',
+      '&7• &aBoard này ưu tiên khi người chơi vào dungeon.',
+    ],
+    boss: [
+      '&f☠ Thông tin',
+      '&7• &eHiển thị tên boss, máu và tình trạng chiến đấu.',
+      '',
+      '&f⌛ Ghi chú',
+      '&7• &aDùng cho boss thường hoặc boss ẩn.',
+    ],
+    worldboss: [
+      '&f☠ Thông tin',
+      '&7• &eHiển thị top dame và trạng thái boss thế giới.',
+      '',
+      '&f⌛ Ghi chú',
+      '&7• &aBoard này nên đặt priority cao hơn khu khác.',
+    ],
+    farm: [
+      '&f✦ Thông tin',
+      '&7• &eHiển thị mob, exp, vật phẩm và tiến trình farm.',
+      '',
+      '&f⌛ Ghi chú',
+      '&7• &aDùng cho khu farm thường và farm dungeon.',
+    ],
+    spawn: [
+      '&f☕ Thông tin',
+      '&7• &eHiển thị tiền, xu, online và hướng dẫn cơ bản.',
+      '',
+      '&f⌛ Ghi chú',
+      '&7• &aKhu khởi sinh của server.',
+    ],
+    trade: [
+      '&f✦ Thông tin',
+      '&7• &eHiển thị đổi đồ, kho báu và cửa hàng trao đổi.',
+      '',
+      '&f⌛ Ghi chú',
+      '&7• &aDùng cho khu trade / shop / đổi nguyên liệu.',
+    ],
+    custom: [
+      '&f✦ Thông tin',
+      '&7• &eTùy chỉnh hoàn toàn theo nhu cầu của bạn.',
+      '',
+      '&f⌛ Ghi chú',
+      '&7• &aBoard này là mẫu tự do.',
+    ],
+  };
+
+  return [
+    ...common,
+    ...(blocks[type] || blocks.custom),
+    '',
+    '&8&m--------------------',
+  ];
+}
+
+function buildServerBoardYaml() {
+  const preset = serverboardPreset(sbType.value);
+  const values = {
+    type: sbType.value || 'custom',
+    board: sbBoard.value.trim() || preset.board,
+    region: sbRegion.value.trim() || preset.region,
+    world: sbWorld.value.trim() || preset.world,
+    priority: Number(sbPriority.value || preset.priority || 0),
+    title: sbTitle.value.trim() || preset.title,
+    x1: Number(sbX1.value || 0),
+    y1: Number(sbY1.value || 0),
+    z1: Number(sbZ1.value || 0),
+    x2: Number(sbX2.value || 0),
+    y2: Number(sbY2.value || 0),
+    z2: Number(sbZ2.value || 0),
+    note: preset.hookLine,
+  };
+
+  const lines = [
+    '# ServerBoardKai - auto generated config',
+    'messages:',
+    '  prefix: "&b[ServerBoard]&r "',
+    '  region-created: "&aĐã tạo region &f{region}&a cho board &f{board}&a."',
+    '  region-preview: "&7Bản xem trước tự sinh từ web converter."',
+    '',
+    'settings:',
+    '  enabled: true',
+    '  update-interval-ticks: 20',
+    '  use-placeholderapi: true',
+    '  use-itemsadder-glyph: true',
+    '  use-thicmobkai-hook: true',
+    '  default-board: "default"',
+    '',
+    'hooks:',
+    '  thicmobkai:',
+    '    enabled: true',
+    `    board: ${yamlScalar(values.board)}`,
+    `    region: ${yamlScalar(values.region)}`,
+    `    type: ${yamlScalar(values.type)}`,
+    `    note: ${yamlScalar(values.note)}`,
+    '',
+    'boards:',
+    `  ${safeId(values.board)}:`,
+    `    title: ${yamlScalar(values.title)}`,
+    '    itemsadder-logo: ""',
+    '    lines:',
+    ...serverboardLines(values.type, values).map((line) => `      - ${yamlScalar(line)}`),
+    '',
+    'regions:',
+    `  ${safeId(values.region)}:`,
+    `    world: ${yamlScalar(values.world)}`,
+    `    board: ${yamlScalar(values.board)}`,
+    `    priority: ${values.priority}`,
+    '    pos1:',
+    `      x: ${values.x1}`,
+    `      y: ${values.y1}`,
+    `      z: ${values.z1}`,
+    '    pos2:',
+    `      x: ${values.x2}`,
+    `      y: ${values.y2}`,
+    `      z: ${values.z2}`,
+    '',
+    '# Gợi ý:',
+    '#  - Dungeons nên dùng board riêng.',
+    '#  - Boss thế giới nên ưu tiên priority cao hơn.',
+    '#  - Farm/Spawn có thể dùng board ngắn gọn, dễ đọc.',
+  ];
+
+  return lines.join('\n');
+}
+
+function renderServerboardOutput() {
+  if (!sbOutput || !sbReport) return;
+  const text = buildServerBoardYaml();
+  sbOutput.value = text;
+  const preset = serverboardPreset(sbType.value);
+  sbReport.classList.remove('empty');
+  sbReport.innerHTML = [
+    `<div class="good">Đã sinh config cho <strong>${preset.label}</strong>.</div>`,
+    `<div class="file-pill">🧩 ${safeId(sbRegion.value || preset.region)} · ${safeId(sbBoard.value || preset.board)}</div>`,
+    `<pre>Board: ${sbBoard.value || preset.board}\nRegion: ${sbRegion.value || preset.region}\nWorld: ${sbWorld.value || preset.world}\nPriority: ${sbPriority.value || preset.priority}</pre>`,
+  ].join('');
 }
 
 function previewSplitFiles() {
@@ -737,3 +1052,5 @@ function renderOutput() {
 
 renderOutput();
 initSplitControls();
+renderRegionPresetButtons();
+renderServerboardOutput();

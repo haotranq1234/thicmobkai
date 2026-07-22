@@ -1,6 +1,9 @@
 # ThicMobKai Converter
 
-Trang web thử nghiệm để quét pack MythicMobs + ModelEngine 4 và chuyển sang đầu ra ThicMobKai-only.
+Trang web thử nghiệm gồm 2 phần:
+
+- Converter để quét pack MythicMobs + ModelEngine 4 và chuyển sang đầu ra ThicMobKai-only
+- ServerBoardKai Hook để tự sinh config vùng theo preset khu
 
 ## Tính năng
 
@@ -10,6 +13,7 @@ Trang web thử nghiệm để quét pack MythicMobs + ModelEngine 4 và chuyể
 - Sinh `mobs.yml`, `bosses.yml`, `skills.yml` và các file tách riêng cho từng mob / boss
 - Xuất gói kết quả mà không cần giữ MythicMobs trong pack đầu ra
 - Hiển thị cảnh báo khi gặp mechanic chưa có luật dịch
+- Có trang riêng để sinh YAML hook cho ServerBoardKai theo dungeon / boss / farm / spawn / trade
 
 ## Cách dùng
 
@@ -17,6 +21,7 @@ Trang web thử nghiệm để quét pack MythicMobs + ModelEngine 4 và chuyể
 2. Bấm `Quét pack`
 3. Xem báo cáo, `ThicMobKai`, `Skill map`, `Tách file`, `Sửa lỗi`
 4. Tải file xuất ra để dùng trực tiếp cho ThicMobKai
+5. Chuyển sang tab `ServerBoardKai Hook`, chọn preset khu và copy YAML ra host
 
 ## Ghi chú
 
