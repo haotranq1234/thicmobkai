@@ -498,6 +498,21 @@ function parseMobLike(content, sourceName) {
   };
 }
 
+function orderedTriggers(grouped) {
+  const seen = new Set();
+  const ordered = [];
+  for (const trigger of THICMOB_SUPPORTED_TRIGGERS) {
+    if (grouped[trigger]) {
+      ordered.push(trigger);
+      seen.add(trigger);
+    }
+  }
+  for (const trigger of Object.keys(grouped || {})) {
+    if (!seen.has(trigger)) ordered.push(trigger);
+  }
+  return ordered;
+}
+
 function buildEntityYaml(mob, headerName) {
   const lines = [`# ThicMobKai - ${headerName}`, `${headerName}:`];
   lines.push(`  ${mob.id}:`);
@@ -514,7 +529,7 @@ function buildEntityYaml(mob, headerName) {
   lines.push(`    skills:`);
 
   const grouped = groupSkillsByTrigger(mob.skills);
-  const triggers = THICMOB_SUPPORTED_TRIGGERS;
+  const triggers = orderedTriggers(grouped);
   for (const trigger of triggers) {
     const entries = grouped[trigger] || [];
     if (!entries.length) {
@@ -587,7 +602,7 @@ function buildSkillsYaml(mobs, bosses) {
     lines.push(`    model4-id: ${yamlScalar(mob.model || '')}`);
     lines.push(`    converted-skills:`);
     const grouped = groupSkillsByTrigger(mob.skills);
-    const triggers = THICMOB_SUPPORTED_TRIGGERS;
+    const triggers = orderedTriggers(grouped);
     for (const trigger of triggers) {
       const entries = grouped[trigger] || [];
       if (!entries.length) {
@@ -617,14 +632,9 @@ function buildFixNotes(files, mobs, bosses) {
     if (unsupported.length) {
       notes.push(`- ${mob.sourceName}: có ${unsupported.length} skill chưa có luật dịch tự động, tool sẽ giữ raw fallback.`);
     }
-    const droppedTriggers = (mob.skills || []).filter((skill) => !THICMOB_SUPPORTED_TRIGGERS.includes(skill.trigger));
-    if (droppedTriggers.length) {
-      const triggerNames = [...new Set(droppedTriggers.map((skill) => skill.trigger))];
-      notes.push(`- ${mob.sourceName}: bỏ ${droppedTriggers.length} skill ở trigger chưa hỗ trợ (${triggerNames.join(', ')}).`);
-    }
   }
 
-  notes.push('- Skill MythicMobs phổ biến sẽ được dịch tự động sang draft ThicMobKai; mechanic quá đặc thù vẫn giữ raw để bạn chỉnh tiếp.');
+  notes.push('- Skill MythicMobs được giữ nguyên trong lớp raw backup và đồng thời sinh layer ThicMobKai để hai bên không giẫm nhau.');
   return notes.length ? notes.join('\n') : '- Không phát hiện lỗi lớn trong pack.';
 }
 
@@ -645,11 +655,14 @@ async function scanPack(file) {
   const bosses = [];
   const scanned = [];
   const modelCatalog = [];
+  const originalFiles = [];
 
   await Promise.all(
     Object.values(zip.files).map(async (entry) => {
       if (entry.dir) return;
       const name = normalize(entry.name);
+      const bytes = await entry.async('uint8array');
+      originalFiles.push({ path: name, data: bytes });
       if (!/\.(yml|yaml|bbmodel|json|txt)$/i.test(name)) return;
       const text = await entry.async('string');
       scanned.push(name);
@@ -706,6 +719,7 @@ async function scanPack(file) {
     `# Mob files: ${mobs.length}`,
     `# Boss files: ${bosses.length}`,
     `# Raw backup: ${RAW_BACKUP_DIR}/mythicmobs-raw.yml`,
+    `# Original pack mirrored: ${originalFiles.length} files`,
     '',
     ...Object.keys(splitFiles).sort().map((path) => `- ${path}`),
   ].join('\n');
@@ -726,6 +740,7 @@ async function scanPack(file) {
       2,
     ),
     bundleFiles: {
+      ...Object.fromEntries(originalFiles.map((item) => [`original-pack/${item.path}`, item.data])),
       'mobs/mobs.yml': generated.mobs,
       'bosses/bosses.yml': generated.bosses,
       ...splitFiles,
