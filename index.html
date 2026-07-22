@@ -3,177 +3,331 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ThicMobKai Converter</title>
+    <title>ThicMobKai - Cổng tài liệu & hệ thống</title>
+    <meta
+      name="description"
+      content="Trang giới thiệu ThicMobKai: quái, boss, dungeon, rương boss, danh hiệu, tích hợp ModelEngine 4, DiscordSRV, PlaceholderAPI và ServerBoardKai."
+    />
     <link rel="stylesheet" href="./styles.css" />
     <script type="module" src="./app.js"></script>
   </head>
   <body>
-    <main class="shell">
-      <div class="page-switcher">
-        <button class="page-tab active" data-page="converter">ThicMobKai Converter</button>
-        <button class="page-tab" data-page="serverboard">ServerBoardKai Hook</button>
-      </div>
+    <div class="ambient ambient-a"></div>
+    <div class="ambient ambient-b"></div>
 
-      <section class="page active" data-page-panel="converter">
+    <header class="topbar">
+      <div class="brand-block">
+        <div class="brand-mark">TK</div>
+        <div>
+          <p class="eyebrow">ThicMobKai</p>
+          <h1>Cổng tài liệu & hướng dẫn hệ thống</h1>
+        </div>
+      </div>
+      <nav class="page-switcher" aria-label="Chuyển trang">
+        <button class="page-tab active" data-page="overview">Tổng quan</button>
+        <button class="page-tab" data-page="systems">Hệ thống</button>
+        <button class="page-tab" data-page="admin">Cấu hình</button>
+        <button class="page-tab" data-page="integration">Tích hợp</button>
+        <button class="page-tab" data-page="setup">Cài đặt</button>
+      </nav>
+    </header>
+
+    <main class="shell">
+      <section class="page active" data-page-panel="overview">
         <section class="hero">
-          <div>
-            <p class="eyebrow">ThicMobKai · Pack Converter</p>
-            <h1>Quăng pack MythicMobs + ModelEngine 4 vào đây, mình chuyển skill sang ThicMobKai.</h1>
+          <div class="hero-copy">
+            <p class="eyebrow">KaiBlue edition · ThicMobKai 1.0.0</p>
+            <h2>Toàn bộ dungeon, mob, boss, danh hiệu, và bảng điều khiển đều ở cùng một nơi.</h2>
             <p class="lede">
-              Công cụ v1 cho pack `.zip`: quét mob, boss, model, skill, rồi xuất ra pack ThicMobKai-only để bạn không cần cài MythicMobs.
+              Đây là trang hướng dẫn chính thức cho plugin ThicMobKai. Mục tiêu của web là giúp người chơi
+              hiểu nhanh, quản trị viên chỉnh nhanh, và người mua plugin nhìn ra được toàn bộ giá trị của hệ
+              thống mà không phải mò từng file YAML.
             </p>
+            <div class="hero-actions">
+              <a class="button primary" href="#pages">Xem từng trang</a>
+              <a class="button ghost" href="#files">Xem file cấu hình</a>
+            </div>
           </div>
           <div class="hero-card">
             <div class="stat">
+              <span>JAR</span>
+              <strong>ThicMobKai-1.0.0.jar</strong>
+              <small>Phiên bản Việt hoá, không còn nhánh zkai.</small>
+            </div>
+            <div class="stat">
+              <span>Trọng tâm</span>
+              <strong>Mob - Boss - Dungeon</strong>
+              <small>Bãi farm, boss thế giới, rương boss, danh hiệu, skill, card.</small>
+            </div>
+            <div class="stat">
               <span>Hỗ trợ</span>
-              <strong>MythicMobs</strong>
-              <small>Input pack để tool dịch sang ThicMobKai</small>
-            </div>
-            <div class="stat">
-              <span>Xuất ra</span>
-              <strong>mobs.yml</strong>
-              <small>bosses/*.yml · skills.yml · split zip</small>
-            </div>
-            <div class="stat">
-              <span>Chế độ sửa lỗi</span>
-              <strong>Heuristic Fix</strong>
-              <small>gợi ý sửa config hỏng</small>
+              <strong>ModelEngine 4 · DiscordSRV · PAPI</strong>
+              <small>ServerBoardKai hook, model pack, tab/chat placeholder.</small>
             </div>
           </div>
         </section>
 
-        <section class="grid">
-          <article class="panel upload">
-            <h2>1. Tải pack</h2>
-            <p>Kéo thả file `.zip` của bạn vào đây. Có thể đổi tên file, công cụ sẽ quét nội dung bên trong.</p>
-            <label id="dropzone" class="dropzone" for="file-input">
-              <input id="file-input" type="file" accept=".zip" />
-              <span class="drop-title">Thả pack vào đây</span>
-              <span class="drop-sub">hoặc bấm để chọn file .zip</span>
-            </label>
-            <div class="actions">
-              <button id="scan-btn" class="primary">Quét pack</button>
-              <button id="export-btn" class="ghost" disabled>Xuất config</button>
-            </div>
-            <div class="hint">
-              <strong>Ghi chú:</strong> bản v1 chạy tốt nhất với `.zip`. Mình có thể nâng cấp tiếp để hỗ trợ `.rar` và sửa sâu hơn nếu bạn muốn.
-              Pack đầu vào chỉ dùng để đọc và chuyển đổi; file xuất ra là ThicMobKai-only, giữ model4 và logic tương thích tối đa.
-            </div>
+        <section class="card-grid" id="pages">
+          <article class="panel callout">
+            <h3>Trang này có gì</h3>
+            <ul class="feature-list">
+              <li>Tổng quan nhanh về plugin và mục tiêu thiết kế.</li>
+              <li>Danh sách hệ thống gameplay: mob, dungeon, boss, world boss, chest.</li>
+              <li>Giải thích file YAML để admin chỉnh không cần build lại.</li>
+              <li>Tích hợp với ModelEngine 4, DiscordSRV, ServerBoardKai và PlaceholderAPI.</li>
+            </ul>
           </article>
-
-          <article class="panel">
-            <h2>2. Báo cáo</h2>
-            <div id="report" class="report empty">
-              Chưa có pack nào được quét.
-            </div>
+          <article class="panel callout">
+            <h3>Phong cách triển khai</h3>
+            <ul class="feature-list">
+              <li>Tối ưu cho server RPG / dungeon / farm mob.</li>
+              <li>Ưu tiên GUI rõ ràng, lore ngắn, đẹp và dễ quản trị.</li>
+              <li>Chia tính năng theo từng trang để người mới không bị ngợp.</li>
+              <li>File config tách riêng để tự chỉnh ngay trong host.</li>
+            </ul>
           </article>
-
-          <article class="panel">
-            <h2>3. Cấu hình xuất ra</h2>
-            <div class="tabs">
-              <button class="tab active" data-target="thicmob">ThicMobKai</button>
-              <button class="tab" data-target="skills">Skill map</button>
-              <button class="tab" data-target="split">Tách file</button>
-              <button class="tab" data-target="fixes">Sửa lỗi</button>
-              <button class="tab" data-target="raw">Raw scan</button>
-            </div>
-            <div class="split-tools">
-              <label for="split-file-select">Xem file riêng</label>
-              <select id="split-file-select"></select>
-              <textarea id="split-file-preview" spellcheck="false" readonly></textarea>
-            </div>
-            <textarea id="output" spellcheck="false" readonly></textarea>
+          <article class="panel callout">
+            <h3>Điểm nổi bật</h3>
+            <ul class="feature-list">
+              <li>Boss thế giới rơi rương top 1-5.</li>
+              <li>Dungeon hub riêng, card riêng, bảng top riêng.</li>
+              <li>Danh hiệu cho chat và tablist qua placeholder.</li>
+              <li>Holo spawner và board bên phải có thể hook theo vùng.</li>
+            </ul>
           </article>
         </section>
       </section>
 
-      <section class="page" data-page-panel="serverboard">
-        <section class="hero">
-          <div>
-            <p class="eyebrow">ServerBoardKai · Hook Builder</p>
-            <h1>Chọn khu nào, tool tự sinh config hook cho ServerBoardKai.</h1>
-            <p class="lede">
-              Dùng để ghép vùng dungeon, boss, farm, spawn hoặc trade với board phù hợp. Chọn preset xong là có ngay YAML mẫu để dán vào host.
-            </p>
-          </div>
-          <div class="hero-card">
-            <div class="stat">
-              <span>Input</span>
-              <strong>Khu vực / Region</strong>
-              <small>tọa độ + board + priority</small>
-            </div>
-            <div class="stat">
-              <span>Xuất ra</span>
-              <strong>serverboardkai.yml</strong>
-              <small>boards · regions · hooks</small>
-            </div>
-            <div class="stat">
-              <span>Mục tiêu</span>
-              <strong>Auto config</strong>
-              <small>gợi ý khu nào là tool sinh config khu đó</small>
-            </div>
-          </div>
+      <section class="page hidden" data-page-panel="systems">
+        <section class="section-head">
+          <p class="eyebrow">Trang 2</p>
+          <h2>Hệ thống gameplay</h2>
+          <p class="lede">
+            Đây là phần dành cho người chơi và admin muốn hiểu plugin đang làm gì. Mỗi khối hệ thống đều
+            có mục đích riêng, tránh nhồi tất cả vào một menu.
+          </p>
         </section>
 
-        <section class="grid board-grid">
-          <article class="panel">
-            <h2>1. Chọn preset khu</h2>
-            <p>Chọn kiểu khu để tool tự điền board, tiêu đề và các dòng hiển thị.</p>
-            <div class="preset-grid" id="region-presets"></div>
-            <div class="form-grid">
-              <label>Kiểu khu
-                <select id="sb-type">
-                  <option value="dungeon">Dungeon</option>
-                  <option value="boss">Boss</option>
-                  <option value="worldboss">Boss thế giới</option>
-                  <option value="farm">Khu farm</option>
-                  <option value="spawn">Spawn</option>
-                  <option value="trade">Trade</option>
-                  <option value="custom">Tự chọn</option>
-                </select>
-              </label>
-              <label>Board
-                <input id="sb-board" type="text" value="dungeon" />
-              </label>
-              <label>Region ID
-                <input id="sb-region" type="text" value="dungeon_01" />
-              </label>
-              <label>World
-                <input id="sb-world" type="text" value="world" />
-              </label>
-              <label>Priority
-                <input id="sb-priority" type="number" value="20" />
-              </label>
-              <label>Tiêu đề board
-                <input id="sb-title" type="text" value="&6♜ &eDungeon" />
-              </label>
+        <section class="stack">
+          <article class="feature-card">
+            <div>
+              <span class="pill">Dungeon Hub</span>
+              <h3>Quản lý lượt, card, bảng top và vùng dungeon</h3>
+              <p>Người chơi mở dungeon hub để xem danh sách dungeon, lượt còn lại, mua thêm lượt, và đi thẳng vào khu phù hợp.</p>
             </div>
+            <pre>/tmk dungeon
+/tmk dungeon top
+/tmk dungeon buy &lt;id&gt; [amount] [money|playerpoints|xucorekai]</pre>
+          </article>
+
+          <article class="feature-card">
+            <div>
+              <span class="pill">Mob Farm</span>
+              <h3>20 mob bãi farm riêng, 100% item trao đổi</h3>
+              <p>Mỗi mob farm có level, mob vanilla hợp lý, và vật phẩm rơi để đổi đồ tại <code>/warp tradedungeon</code>.</p>
+            </div>
+            <pre>mobs:
+  desert_sentinel:
+    entity-type: HUSK
+    level: {min: 1, max: 20}
+    drops:
+      - item-id: sand_token</pre>
+          </article>
+
+          <article class="feature-card">
+            <div>
+              <span class="pill">Boss Book</span>
+              <h3>Boss thường, boss ẩn và boss thế giới tách riêng</h3>
+              <p>Sổ boss cho người chơi xem tiến trình; boss thế giới dùng hệ thống top dame và rương riêng.</p>
+            </div>
+            <pre>world-bosses.yml
+bosses.yml
+hidden-bosses.yml
+world-boss-chests.yml</pre>
+          </article>
+
+          <article class="feature-card">
+            <div>
+              <span class="pill">World Boss Chest</span>
+              <h3>Boss thế giới rơi rương cho top 1-5</h3>
+              <p>Boss chết sẽ đặt rương ở chỗ hạ boss. Top 1 đến top 5 mở rương để nhận quà riêng theo rank.</p>
+            </div>
+            <pre>Top 1 → quà mạnh nhất
+Top 2-5 → pool riêng
+Hologram → báo tên boss và số lượt đã mở</pre>
+          </article>
+
+          <article class="feature-card">
+            <div>
+              <span class="pill">Danh hiệu</span>
+              <h3>Hiện trong chat, tablist và lore hồ sơ</h3>
+              <p>Danh hiệu có thể cấp bằng quyền admin hoặc mở bằng thành tích. Dùng placeholder để ghép với plugin khác.</p>
+            </div>
+            <pre>%rank% %player% %title%
+chat enabled: false/true
+tab enabled: false/true</pre>
+          </article>
+        </section>
+      </section>
+
+      <section class="page hidden" data-page-panel="admin">
+        <section class="section-head">
+          <p class="eyebrow">Trang 3</p>
+          <h2>Cấu hình & file YAML</h2>
+          <p class="lede">
+            Mục này dành cho admin. Tất cả tiêu đề, lore, mô tả lệnh, và cách hiển thị GUI đều có thể chỉnh
+            trong file host mà không cần build lại plugin.
+          </p>
+        </section>
+
+        <section class="file-layout" id="files">
+          <article class="panel">
+            <h3>Danh sách file chính</h3>
+            <ul class="file-list">
+              <li><strong>config.yml</strong> - cấu hình tổng, top dame, world boss, bảng màu, hook.</li>
+              <li><strong>message.yml</strong> - đổi tên GUI, lore, mô tả lệnh, câu hướng dẫn.</li>
+              <li><strong>farm-mobs.yml</strong> - mob bãi farm 1-20.</li>
+              <li><strong>dungeon-mobs.yml</strong> - mob riêng cho dungeon.</li>
+              <li><strong>bosses.yml</strong> - boss thường.</li>
+              <li><strong>world-bosses.yml</strong> - boss thế giới.</li>
+              <li><strong>world-boss-chests.yml</strong> - pool rương top 1-5.</li>
+              <li><strong>hidden-bosses.yml</strong> - boss tinh anh / boss ẩn.</li>
+              <li><strong>dungeons.yml</strong> - rank, thưởng, vùng dungeon.</li>
+              <li><strong>spawners.yml</strong> - khu spawner và holo.</li>
+              <li><strong>card-rewards.yml</strong> - pool quay thưởng từ card.</li>
+              <li><strong>titles.yml</strong> - danh hiệu.</li>
+              <li><strong>collections.yml</strong> - bộ sưu tập dungeon.</li>
+              <li><strong>secret-treasures.yml</strong> - kho báu bí mật.</li>
+            </ul>
           </article>
 
           <article class="panel">
-            <h2>2. Tọa độ vùng</h2>
-            <p>Nhập hai góc vùng. Tool sẽ tự ghép config region cho ServerBoardKai.</p>
-            <div class="form-grid coords">
-              <label>Pos1 X <input id="sb-x1" type="number" value="0" /></label>
-              <label>Pos1 Y <input id="sb-y1" type="number" value="0" /></label>
-              <label>Pos1 Z <input id="sb-z1" type="number" value="0" /></label>
-              <label>Pos2 X <input id="sb-x2" type="number" value="100" /></label>
-              <label>Pos2 Y <input id="sb-y2" type="number" value="100" /></label>
-              <label>Pos2 Z <input id="sb-z2" type="number" value="100" /></label>
+            <h3>message.yml dùng để làm gì</h3>
+            <p>Đây là file để admin tự đổi phần chữ mà người chơi nhìn thấy, bao gồm:</p>
+            <div class="tag-cloud">
+              <span>Tiêu đề GUI</span>
+              <span>Lore item</span>
+              <span>Mô tả lệnh</span>
+              <span>Hướng dẫn slot</span>
+              <span>Tên khu vực</span>
+              <span>Dòng mô tả boss</span>
             </div>
-            <div class="actions">
-              <button id="sb-generate" class="primary">Tạo config khu</button>
-              <button id="sb-copy" class="ghost">Copy YAML</button>
-            </div>
-            <div class="hint">
-              <strong>Gợi ý:</strong> dungeon thì ưu tiên board riêng; boss thế giới thì để board hiển thị sống động hơn; khu farm thì dùng dòng ngắn, rõ, dễ nhìn.
-            </div>
+            <pre>text-overrides:
+  gui-title:
+    dungeon-hub:
+      vi: "&8ThicMobKai &7- &bTrung tâm hầm ngục"
+  help:
+    member:
+      vi:
+        - "&f/tmk dungeon"
+        - "&7Mở trung tâm hầm ngục."</pre>
           </article>
 
           <article class="panel">
-            <h2>3. YAML xuất ra</h2>
-            <div class="report" id="sb-report">Chưa tạo config.</div>
-            <textarea id="sb-output" spellcheck="false" readonly></textarea>
+            <h3>Lưu ý cho admin</h3>
+            <ul class="feature-list">
+              <li>Không hardcode lore trong code nếu đã có mục override trong message.yml.</li>
+              <li>GUI con nên chỉ giải thích tính năng của GUI đó, không nhét hướng dẫn trùng ở slot 53.</li>
+              <li>Bộ boss thế giới hiện có top dame, boss bar, DiscordSRV, và rương riêng.</li>
+              <li>Những file item / drop có thể chỉnh bằng kéo-thả item vào GUI quản trị.</li>
+            </ul>
+          </article>
+        </section>
+      </section>
+
+      <section class="page hidden" data-page-panel="integration">
+        <section class="section-head">
+          <p class="eyebrow">Trang 4</p>
+          <h2>Tích hợp plugin</h2>
+          <p class="lede">
+            Đây là phần để ghép ThicMobKai vào server hiện có. Trang này nói rõ plugin nào hỗ trợ gì, cái nào
+            nên bật, và phần nào chỉ là hook để hiển thị đẹp hơn.
+          </p>
+        </section>
+
+        <section class="integration-grid">
+          <article class="integration-card">
+            <h3>ModelEngine 4</h3>
+            <p>Giữ nguyên model `.bbmodel`, gắn id model vào mob, và dùng hiệu ứng của pack để tạo chuyển động / vung kiếm / đòn đánh.</p>
+          </article>
+          <article class="integration-card">
+            <h3>DiscordSRV</h3>
+            <p>Boss thế giới và boss ẩn có thể báo riêng, kênh riêng, tránh gộp chung với thông báo mob farm.</p>
+          </article>
+          <article class="integration-card">
+            <h3>PlaceholderAPI</h3>
+            <p>Dùng cho board, tablist, hologram, danh hiệu, cấp người chơi, combo, lucky score và top dame.</p>
+          </article>
+          <article class="integration-card">
+            <h3>ServerBoardKai</h3>
+            <p>Board bên phải đổi theo vùng: dungeon, boss, world boss, farm, spawn, trade. Có thể tự sinh config cho từng khu.</p>
+          </article>
+          <article class="integration-card">
+            <h3>MythicMobs pack converter</h3>
+            <p>Web dùng để đọc pack bên ngoài, giữ model4, loại mechanic không hỗ trợ, rồi chuyển skill tương thích qua ThicMobKai.</p>
+          </article>
+          <article class="integration-card">
+            <h3>ItemsAdder / custom model</h3>
+            <p>Card, mob egg, rương boss, thẻ dungeon đều có thể đổi model và icon nếu admin muốn trang trí lại.</p>
+          </article>
+        </section>
+      </section>
+
+      <section class="page hidden" data-page-panel="setup">
+        <section class="section-head">
+          <p class="eyebrow">Trang 5</p>
+          <h2>Cài đặt nhanh & FAQ</h2>
+          <p class="lede">
+            Một trang gọn cho lúc cần làm nhanh trên host, hoặc khi bạn muốn gửi cho người chơi / người mua
+            plugin mà không cần giải thích dài dòng.
+          </p>
+        </section>
+
+        <section class="setup-grid">
+          <article class="panel">
+            <h3>Quy trình cài đặt</h3>
+            <ol class="step-list">
+              <li>Thả jar vào thư mục plugins.</li>
+              <li>Chạy server một lần để plugin tự sinh file YAML.</li>
+              <li>Chỉnh `config.yml` và `message.yml` theo server của bạn.</li>
+              <li>Set dungeon, set spawner, set boss, set card reward.</li>
+              <li>Dùng GUI admin để tinh chỉnh cuối cùng.</li>
+            </ol>
+          </article>
+
+          <article class="panel">
+            <h3>Điểm nên bật</h3>
+            <div class="tag-cloud">
+              <span>boss-damage.enabled</span>
+              <span>world-boss.chest.enabled</span>
+              <span>use-placeholderapi</span>
+              <span>use-itemsadder-glyph</span>
+              <span>spawner-hologram.enabled</span>
+              <span>skill-tree.enabled</span>
+            </div>
+            <pre># Gợi ý
+world-boss:
+  chest:
+    enabled: true
+    claim-limit: 5</pre>
+          </article>
+
+          <article class="panel">
+            <h3>FAQ</h3>
+            <div class="faq">
+              <details>
+                <summary>Có cần MythicMobs không?</summary>
+                <p>Không bắt buộc. Plugin hướng tới việc giữ pack ModelEngine 4 nhưng chuyển skill tương thích qua ThicMobKai.</p>
+              </details>
+              <details>
+                <summary>Có đổi lore / tên GUI mà không build lại được không?</summary>
+                <p>Có. Dùng `message.yml` để đổi toàn bộ phần chữ hiển thị chính.</p>
+              </details>
+              <details>
+                <summary>Boss thế giới có rơi rương không?</summary>
+                <p>Có. Top 1-5 mở rương riêng theo rank, pool có thể chỉnh trong GUI admin.</p>
+              </details>
+            </div>
           </article>
         </section>
       </section>

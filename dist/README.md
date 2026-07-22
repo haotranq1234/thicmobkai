@@ -1,30 +1,31 @@
-# ThicMobKai Converter
+# ThicMobKai Docs Site
 
-Trang web thử nghiệm gồm 2 phần:
+Trang web giới thiệu chính thức cho ThicMobKai.
 
-- Converter để quét pack MythicMobs + ModelEngine 4 và chuyển sang đầu ra ThicMobKai-only
-- ServerBoardKai Hook để tự sinh config vùng theo preset khu
+## Mục tiêu
 
-## Tính năng
+- Giới thiệu toàn bộ hệ thống mob, boss, dungeon, danh hiệu và rương boss
+- Chia thông tin thành nhiều trang để dễ đọc
+- Cho admin biết file YAML nào dùng để chỉnh gì
+- Tóm tắt các hook quan trọng như ModelEngine 4, DiscordSRV, PlaceholderAPI và ServerBoardKai
 
-- Quét file `.zip` chứa mob, boss, model, skill
-- Tự nhận diện ModelEngine 4 `.bbmodel`
-- Dịch một phần mechanic skill MythicMobs sang lớp ThicMobKai
-- Sinh `mobs.yml`, `bosses.yml`, `skills.yml` và các file tách riêng cho từng mob / boss
-- Xuất gói kết quả mà không cần giữ MythicMobs trong pack đầu ra
-- Hiển thị cảnh báo khi gặp mechanic chưa có luật dịch
-- Có trang riêng để sinh YAML hook cho ServerBoardKai theo dungeon / boss / farm / spawn / trade
+## Chạy local
 
-## Cách dùng
+```bash
+npm install
+npm run build
+```
 
-1. Kéo thả pack `.zip` vào web
-2. Bấm `Quét pack`
-3. Xem báo cáo, `ThicMobKai`, `Skill map`, `Tách file`, `Sửa lỗi`
-4. Tải file xuất ra để dùng trực tiếp cho ThicMobKai
-5. Chuyển sang tab `ServerBoardKai Hook`, chọn preset khu và copy YAML ra host
+Sau đó mở `index.html` hoặc phục vụ thư mục `dist/`.
+
+## Cấu trúc
+
+- `index.html`: giao diện site
+- `styles.css`: giao diện và layout
+- `app.js`: chuyển trang bằng hash
+- `build.mjs`: copy site sang `dist/`
 
 ## Ghi chú
 
-- Đây là bản converter ban đầu, chưa hỗ trợ toàn bộ mechanic của MythicMobs.
-- Nếu pack có mechanic chưa hỗ trợ, tool sẽ đánh dấu để nâng cấp sau.
-- Pack xuất ra được thiết kế để đi theo hướng ThicMobKai thuần, không phụ thuộc MythicMobs.
+- Repo này đã bỏ toàn bộ converter web cũ.
+- Web hiện tại chỉ còn mục tài liệu / hướng dẫn / giới thiệu plugin.
