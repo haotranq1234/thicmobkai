@@ -9,14 +9,19 @@ const tabs = [...document.querySelectorAll('.tab')];
 let selectedFile = null;
 let scanState = null;
 let currentTab = 'thicmob';
+let splitFileSelect = null;
+let splitFilePreview = null;
 
 const ZIP_URL = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm';
+const THICMOB_SUPPORTED_TRIGGERS = ['on-spawn', 'on-damage', 'on-attack', 'custom'];
+const RAW_BACKUP_DIR = 'compat/mythicmobs';
 
 tabs.forEach((tab) => {
   tab.addEventListener('click', () => {
     tabs.forEach((btn) => btn.classList.toggle('active', btn === tab));
     currentTab = tab.dataset.target;
     renderOutput();
+    renderSplitPreview();
   });
 });
 
@@ -43,8 +48,34 @@ scanBtn.addEventListener('click', async () => {
   await scanPack(selectedFile);
 });
 
+function initSplitControls() {
+  splitFileSelect = document.getElementById('split-file-select');
+  splitFilePreview = document.getElementById('split-file-preview');
+  if (splitFileSelect) {
+    splitFileSelect.addEventListener('change', () => renderSplitPreview());
+  }
+}
+
 exportBtn.addEventListener('click', () => {
   if (!scanState) return;
+  if (currentTab === 'split' && scanState.bundleFiles) {
+    import(ZIP_URL).then(({ default: JSZip }) => {
+      const zip = new JSZip();
+      for (const [path, content] of Object.entries(scanState.bundleFiles)) {
+        zip.file(path, content);
+      }
+      return zip.generateAsync({ type: 'blob' });
+    }).then((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'thicmobkai-split-pack.zip';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+    return;
+  }
+
   const blob = new Blob([scanState[currentTab]], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -65,6 +96,12 @@ function setReport(html) {
   report.innerHTML = html;
 }
 
+function renderSplitPreview() {
+  if (currentTab !== 'split' || !scanState || !splitFileSelect || !splitFilePreview) return;
+  const path = splitFileSelect.value;
+  splitFilePreview.value = scanState.bundleFiles?.[path] || '';
+}
+
 function normalize(path) {
   return String(path || '').replace(/\\/g, '/').replace(/^\/+/, '');
 }
@@ -73,6 +110,10 @@ function fileBaseName(path) {
   const clean = normalize(path);
   const parts = clean.split('/');
   return parts[parts.length - 1] || '';
+}
+
+function fileStem(path) {
+  return fileBaseName(path).replace(/\.(bbmodel|json|yml|yaml)$/i, '');
 }
 
 function safeId(text) {
@@ -88,6 +129,28 @@ function readTextByRegex(content, patterns, fallback = '') {
     if (match) return match[1].trim();
   }
   return fallback;
+}
+
+function findDeepValue(value, keys) {
+  if (!value || typeof value !== 'object') return '';
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const nested = findDeepValue(item, keys);
+      if (nested) return nested;
+    }
+    return '';
+  }
+  for (const key of Object.keys(value)) {
+    const lowerKey = key.toLowerCase();
+    if (keys.includes(lowerKey) && value[key] !== undefined && value[key] !== null) {
+      const found = value[key];
+      if (typeof found === 'string' && found.trim()) return found.trim();
+      if (typeof found === 'number' || typeof found === 'boolean') return String(found);
+    }
+    const nested = findDeepValue(value[key], keys);
+    if (nested) return nested;
+  }
+  return '';
 }
 
 function splitBlocks(content) {
@@ -132,6 +195,14 @@ function yamlScalar(value) {
   if (/^(true|false|null)$/i.test(text)) return text.toLowerCase();
   if (/^-?\d+(\.\d+)?$/.test(text)) return text;
   return `"${text.replace(/"/g, '\\"')}"`;
+}
+
+function previewSplitFiles() {
+  if (!scanState || !splitFileSelect) return;
+  const paths = Object.keys(scanState.bundleFiles || {}).filter((path) => path.endsWith('.yml') || path.endsWith('.yaml'));
+  splitFileSelect.innerHTML = paths.map((path) => `<option value="${path}">${path}</option>`).join('');
+  if (!splitFileSelect.value && paths.length) splitFileSelect.value = paths[0];
+  renderSplitPreview();
 }
 
 function parseParamBlock(raw) {
@@ -260,6 +331,14 @@ function convertMythicSkill(rawSkill) {
     projectile: 'projectile',
     velocity: 'velocity',
     strike: 'strike',
+    spin: 'spin',
+    animation: 'animation',
+    particle: 'particle',
+    particles: 'particle',
+    dash: 'dash',
+    lunge: 'dash',
+    shield: 'shield',
+    aura: 'aura',
   };
 
   const params = parseParamBlock(raw);
@@ -281,6 +360,76 @@ function convertMythicSkill(rawSkill) {
     raw,
     params,
   };
+}
+
+function parseModelAsset(content, sourceName) {
+  const ext = fileBaseName(sourceName).split('.').pop()?.toLowerCase();
+  const stem = fileStem(sourceName);
+  let modelId = '';
+  let modelName = '';
+  let modelType = 'unknown';
+
+  if (ext === 'bbmodel' || ext === 'json') {
+    try {
+      const json = JSON.parse(content);
+      modelId = findDeepValue(json, ['identifier', 'modelid', 'model_id', 'model', 'id', 'name']);
+      modelName = findDeepValue(json, ['displayname', 'display_name', 'title', 'name']);
+      const typeHint = findDeepValue(json, ['type', 'modeltype']);
+      if (typeHint) modelType = typeHint;
+    } catch {
+      modelId = readTextByRegex(content, [
+        /"identifier"\s*:\s*"([^"]+)"/i,
+        /"model_id"\s*:\s*"([^"]+)"/i,
+        /"modelId"\s*:\s*"([^"]+)"/i,
+        /"name"\s*:\s*"([^"]+)"/i,
+      ], '');
+    }
+  } else {
+    modelId = readTextByRegex(content, [
+      /^\s*identifier:\s*["']?(.+?)["']?\s*$/m,
+      /^\s*model-id:\s*["']?(.+?)["']?\s*$/m,
+      /^\s*model_id:\s*["']?(.+?)["']?\s*$/m,
+      /^\s*id:\s*["']?(.+?)["']?\s*$/m,
+      /^\s*name:\s*["']?(.+?)["']?\s*$/m,
+    ], '');
+    modelName = readTextByRegex(content, [/^\s*display-name:\s*["']?(.+?)["']?\s*$/m], '');
+  }
+
+  const normalizedId = (modelId || modelName || stem || '').trim();
+  return {
+    sourceName,
+    stem: stem.toLowerCase(),
+    modelId: normalizedId,
+    displayName: modelName || normalizedId,
+    type: modelType,
+  };
+}
+
+function inferModelId(mob, modelCatalog) {
+  const candidates = [
+    mob.model,
+    mob.id,
+    fileStem(mob.sourceName),
+    mob.displayName,
+    fileBaseName(mob.sourceName),
+  ]
+    .filter(Boolean)
+    .map((value) => String(value).toLowerCase().replace(/\.(bbmodel|json|yml|yaml)$/i, ''));
+
+  for (const candidate of candidates) {
+    const found = modelCatalog.find((entry) => {
+      const entryId = String(entry.modelId || '').toLowerCase();
+      const entryStem = String(entry.stem || '').toLowerCase();
+      return candidate === entryId || candidate === entryStem || entryId === candidate || entryStem === candidate;
+    });
+    if (found) return found.modelId || found.stem || mob.model || '';
+  }
+
+  if (!mob.model && modelCatalog.length === 1) {
+    return modelCatalog[0].modelId || modelCatalog[0].stem || '';
+  }
+
+  return mob.model || '';
 }
 
 function groupSkillsByTrigger(skills) {
@@ -365,7 +514,7 @@ function buildEntityYaml(mob, headerName) {
   lines.push(`    skills:`);
 
   const grouped = groupSkillsByTrigger(mob.skills);
-  const triggers = ['on-spawn', 'on-damage', 'on-attack', 'on-death', 'on-timer', 'on-load', 'on-shoot', 'on-hit', 'on-interact', 'custom'];
+  const triggers = THICMOB_SUPPORTED_TRIGGERS;
   for (const trigger of triggers) {
     const entries = grouped[trigger] || [];
     if (!entries.length) {
@@ -391,6 +540,42 @@ function buildThicMobYaml(mobs, bosses) {
   return { mobs: builtMobs.join('\n'), bosses: builtBosses.join('\n') };
 }
 
+function buildRawMythicBackup(mobs, bosses) {
+  const lines = ['# MythicMobs raw backup', 'raw-packs:'];
+  for (const mob of [...mobs, ...bosses]) {
+    lines.push(`  ${mob.id}:`);
+    lines.push(`    source-name: ${yamlScalar(mob.sourceName)}`);
+    lines.push(`    display-name: ${yamlScalar(mob.displayName)}`);
+    lines.push(`    model4-id: ${yamlScalar(mob.model || '')}`);
+    lines.push(`    kept-triggers:`);
+    const grouped = groupSkillsByTrigger(mob.skills);
+    for (const [trigger, entries] of Object.entries(grouped)) {
+      lines.push(`      ${trigger}:`);
+      for (const entry of entries) {
+        lines.push(`        - ${yamlScalar(entry.raw)}`);
+      }
+    }
+    lines.push('');
+  }
+  return lines.join('\n');
+}
+
+function buildSplitFiles(mobs, bosses) {
+  const files = {};
+  files['mobs/mobs.yml'] = buildThicMobYaml(mobs, []).mobs;
+  files['bosses/bosses.yml'] = buildThicMobYaml([], bosses).bosses;
+  files[`${RAW_BACKUP_DIR}/mythicmobs-raw.yml`] = buildRawMythicBackup(mobs, bosses);
+
+  for (const mob of mobs) {
+    files[`mobs/${mob.id}.yml`] = buildEntityYaml(mob, 'mobs').join('\n');
+  }
+  for (const boss of bosses) {
+    files[`bosses/${boss.id}.yml`] = buildEntityYaml(boss, 'bosses').join('\n');
+  }
+
+  return files;
+}
+
 function buildSkillsYaml(mobs, bosses) {
   const packs = [...mobs, ...bosses];
   const lines = ['# ThicMobKai - skills.yml', 'skill-packs:'];
@@ -402,7 +587,7 @@ function buildSkillsYaml(mobs, bosses) {
     lines.push(`    model4-id: ${yamlScalar(mob.model || '')}`);
     lines.push(`    converted-skills:`);
     const grouped = groupSkillsByTrigger(mob.skills);
-    const triggers = ['on-spawn', 'on-damage', 'on-attack', 'on-death', 'on-timer', 'on-load', 'on-shoot', 'on-hit', 'on-interact', 'custom'];
+    const triggers = THICMOB_SUPPORTED_TRIGGERS;
     for (const trigger of triggers) {
       const entries = grouped[trigger] || [];
       if (!entries.length) {
@@ -432,9 +617,14 @@ function buildFixNotes(files, mobs, bosses) {
     if (unsupported.length) {
       notes.push(`- ${mob.sourceName}: có ${unsupported.length} skill chưa có luật dịch tự động, tool sẽ giữ raw fallback.`);
     }
+    const droppedTriggers = (mob.skills || []).filter((skill) => !THICMOB_SUPPORTED_TRIGGERS.includes(skill.trigger));
+    if (droppedTriggers.length) {
+      const triggerNames = [...new Set(droppedTriggers.map((skill) => skill.trigger))];
+      notes.push(`- ${mob.sourceName}: bỏ ${droppedTriggers.length} skill ở trigger chưa hỗ trợ (${triggerNames.join(', ')}).`);
+    }
   }
 
-  notes.push('- Skill MythicMobs phổ biến sẽ được dịch sang draft ThicMobKai; mechanic quá đặc thù vẫn giữ raw để bạn chỉnh tiếp.');
+  notes.push('- Skill MythicMobs phổ biến sẽ được dịch tự động sang draft ThicMobKai; mechanic quá đặc thù vẫn giữ raw để bạn chỉnh tiếp.');
   return notes.length ? notes.join('\n') : '- Không phát hiện lỗi lớn trong pack.';
 }
 
@@ -454,6 +644,7 @@ async function scanPack(file) {
   const mobs = [];
   const bosses = [];
   const scanned = [];
+  const modelCatalog = [];
 
   await Promise.all(
     Object.values(zip.files).map(async (entry) => {
@@ -478,45 +669,75 @@ async function scanPack(file) {
           else mobs.push(mob);
         }
         files.push({ name, kind: 'yaml' });
-      } else if (/\.bbmodel$/i.test(name)) {
+      } else if (/\.bbmodel$/i.test(name) || /model.*\.(json|yml|yaml)$/i.test(name)) {
         files.push({ name, kind: 'model' });
+        modelCatalog.push(parseModelAsset(text, name));
       }
     }),
   );
+
+  for (const mob of [...mobs, ...bosses]) {
+    mob.model = inferModelId(mob, modelCatalog);
+  }
 
   const generated = buildThicMobYaml(mobs, bosses);
   const skills = buildSkillsYaml(mobs, bosses);
   const fixNotes = buildFixNotes(scanned, mobs, bosses);
   const supportedSkills = [...mobs, ...bosses].reduce((sum, mob) => sum + (mob.skills || []).filter((skill) => skill.converted?.supported).length, 0);
   const unsupportedSkills = [...mobs, ...bosses].reduce((sum, mob) => sum + (mob.skills || []).filter((skill) => !skill.converted?.supported).length, 0);
+  const droppedTriggers = [...mobs, ...bosses].reduce((sum, mob) => sum + (mob.skills || []).filter((skill) => !THICMOB_SUPPORTED_TRIGGERS.includes(skill.trigger)).length, 0);
+  const modelIds = [...new Set(modelCatalog.map((item) => item.modelId).filter(Boolean))];
   const summary = [
     `Đã quét: ${scanned.length} file`,
     `Mob thường nhận diện: ${mobs.length}`,
     `Boss nhận diện: ${bosses.length}`,
     `ModelEngine 4: ${files.filter((item) => item.kind === 'model').length} file`,
     `MythicMobs: ${files.filter((item) => item.kind === 'yaml').length} file`,
+    `Model ID tự nhận: ${modelIds.length}`,
     `Skill đã dịch: ${supportedSkills}`,
     `Skill giữ raw fallback: ${unsupportedSkills}`,
+    `Skill bị bỏ do trigger chưa hỗ trợ: ${droppedTriggers}`,
+  ].join('\n');
+
+  const splitFiles = buildSplitFiles(mobs, bosses);
+  const splitManifest = [
+    '# ThicMobKai - split files',
+    '',
+    `# Mob files: ${mobs.length}`,
+    `# Boss files: ${bosses.length}`,
+    `# Raw backup: ${RAW_BACKUP_DIR}/mythicmobs-raw.yml`,
+    '',
+    ...Object.keys(splitFiles).sort().map((path) => `- ${path}`),
   ].join('\n');
 
   scanState = {
     thicmob: `${generated.mobs}\n\n${generated.bosses}`,
     skills,
+    split: splitManifest,
     fixes: fixNotes,
     raw: JSON.stringify(
       {
         scanned,
         mobs,
         bosses,
+        modelCatalog,
       },
       null,
       2,
     ),
+    bundleFiles: {
+      'mobs/mobs.yml': generated.mobs,
+      'bosses/bosses.yml': generated.bosses,
+      ...splitFiles,
+      'skills/skills.yml': skills,
+      'manifest.txt': splitManifest,
+    },
   };
 
   setReport([`<div class="good">Quét xong.</div>`, `<div class="file-pill">📦 ${file.name}</div>`, `<pre>${summary}</pre>`].join(''));
   renderOutput();
   exportBtn.disabled = false;
+  previewSplitFiles();
 }
 
 function renderOutput() {
@@ -528,3 +749,4 @@ function renderOutput() {
 }
 
 renderOutput();
+initSplitControls();

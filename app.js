@@ -9,15 +9,19 @@ const tabs = [...document.querySelectorAll('.tab')];
 let selectedFile = null;
 let scanState = null;
 let currentTab = 'thicmob';
+let splitFileSelect = null;
+let splitFilePreview = null;
 
 const ZIP_URL = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm';
 const THICMOB_SUPPORTED_TRIGGERS = ['on-spawn', 'on-damage', 'on-attack', 'custom'];
+const RAW_BACKUP_DIR = 'compat/mythicmobs';
 
 tabs.forEach((tab) => {
   tab.addEventListener('click', () => {
     tabs.forEach((btn) => btn.classList.toggle('active', btn === tab));
     currentTab = tab.dataset.target;
     renderOutput();
+    renderSplitPreview();
   });
 });
 
@@ -43,6 +47,14 @@ scanBtn.addEventListener('click', async () => {
   }
   await scanPack(selectedFile);
 });
+
+function initSplitControls() {
+  splitFileSelect = document.getElementById('split-file-select');
+  splitFilePreview = document.getElementById('split-file-preview');
+  if (splitFileSelect) {
+    splitFileSelect.addEventListener('change', () => renderSplitPreview());
+  }
+}
 
 exportBtn.addEventListener('click', () => {
   if (!scanState) return;
@@ -82,6 +94,12 @@ function setFile(file) {
 function setReport(html) {
   report.classList.remove('empty');
   report.innerHTML = html;
+}
+
+function renderSplitPreview() {
+  if (currentTab !== 'split' || !scanState || !splitFileSelect || !splitFilePreview) return;
+  const path = splitFileSelect.value;
+  splitFilePreview.value = scanState.bundleFiles?.[path] || '';
 }
 
 function normalize(path) {
@@ -177,6 +195,14 @@ function yamlScalar(value) {
   if (/^(true|false|null)$/i.test(text)) return text.toLowerCase();
   if (/^-?\d+(\.\d+)?$/.test(text)) return text;
   return `"${text.replace(/"/g, '\\"')}"`;
+}
+
+function previewSplitFiles() {
+  if (!scanState || !splitFileSelect) return;
+  const paths = Object.keys(scanState.bundleFiles || {}).filter((path) => path.endsWith('.yml') || path.endsWith('.yaml'));
+  splitFileSelect.innerHTML = paths.map((path) => `<option value="${path}">${path}</option>`).join('');
+  if (!splitFileSelect.value && paths.length) splitFileSelect.value = paths[0];
+  renderSplitPreview();
 }
 
 function parseParamBlock(raw) {
@@ -305,6 +331,14 @@ function convertMythicSkill(rawSkill) {
     projectile: 'projectile',
     velocity: 'velocity',
     strike: 'strike',
+    spin: 'spin',
+    animation: 'animation',
+    particle: 'particle',
+    particles: 'particle',
+    dash: 'dash',
+    lunge: 'dash',
+    shield: 'shield',
+    aura: 'aura',
   };
 
   const params = parseParamBlock(raw);
@@ -506,10 +540,31 @@ function buildThicMobYaml(mobs, bosses) {
   return { mobs: builtMobs.join('\n'), bosses: builtBosses.join('\n') };
 }
 
+function buildRawMythicBackup(mobs, bosses) {
+  const lines = ['# MythicMobs raw backup', 'raw-packs:'];
+  for (const mob of [...mobs, ...bosses]) {
+    lines.push(`  ${mob.id}:`);
+    lines.push(`    source-name: ${yamlScalar(mob.sourceName)}`);
+    lines.push(`    display-name: ${yamlScalar(mob.displayName)}`);
+    lines.push(`    model4-id: ${yamlScalar(mob.model || '')}`);
+    lines.push(`    kept-triggers:`);
+    const grouped = groupSkillsByTrigger(mob.skills);
+    for (const [trigger, entries] of Object.entries(grouped)) {
+      lines.push(`      ${trigger}:`);
+      for (const entry of entries) {
+        lines.push(`        - ${yamlScalar(entry.raw)}`);
+      }
+    }
+    lines.push('');
+  }
+  return lines.join('\n');
+}
+
 function buildSplitFiles(mobs, bosses) {
   const files = {};
   files['mobs/mobs.yml'] = buildThicMobYaml(mobs, []).mobs;
   files['bosses/bosses.yml'] = buildThicMobYaml([], bosses).bosses;
+  files[`${RAW_BACKUP_DIR}/mythicmobs-raw.yml`] = buildRawMythicBackup(mobs, bosses);
 
   for (const mob of mobs) {
     files[`mobs/${mob.id}.yml`] = buildEntityYaml(mob, 'mobs').join('\n');
@@ -650,6 +705,7 @@ async function scanPack(file) {
     '',
     `# Mob files: ${mobs.length}`,
     `# Boss files: ${bosses.length}`,
+    `# Raw backup: ${RAW_BACKUP_DIR}/mythicmobs-raw.yml`,
     '',
     ...Object.keys(splitFiles).sort().map((path) => `- ${path}`),
   ].join('\n');
@@ -681,6 +737,7 @@ async function scanPack(file) {
   setReport([`<div class="good">Quét xong.</div>`, `<div class="file-pill">📦 ${file.name}</div>`, `<pre>${summary}</pre>`].join(''));
   renderOutput();
   exportBtn.disabled = false;
+  previewSplitFiles();
 }
 
 function renderOutput() {
@@ -692,3 +749,4 @@ function renderOutput() {
 }
 
 renderOutput();
+initSplitControls();

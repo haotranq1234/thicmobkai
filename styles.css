@@ -51,6 +51,10 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .tab { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); }
 .tab.active { background: rgba(99,214,255,.16); border-color: rgba(99,214,255,.45); }
 textarea { width: 100%; min-height: 340px; resize: vertical; background: var(--panel-2); color: var(--text); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.92rem; line-height: 1.6; }
+.split-tools { display: grid; gap: 10px; margin-bottom: 12px; }
+.split-tools label { color: var(--muted); font-size: 0.9rem; }
+.split-tools select { background: rgba(255,255,255,0.06); color: var(--text); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 10px 12px; }
+.split-tools textarea { min-height: 200px; }
 .file-pill { display: inline-flex; gap: 8px; align-items: center; margin-top: 12px; padding: 8px 12px; border-radius: 999px; background: rgba(99,214,255,0.08); border: 1px solid rgba(99,214,255,0.18); color: var(--text); }
 .error { color: var(--bad); }
 .good { color: var(--good); }
