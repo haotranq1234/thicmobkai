@@ -1,21 +1,25 @@
 # ThicMobKai Converter
 
-Trang web thử nghiệm để quét pack MythicMobs + ModelEngine 4, giữ nguyên pack gốc, rồi sinh lớp ThicMobKai song song.
+Trang web thử nghiệm để quét pack MythicMobs + ModelEngine 4 và chuyển sang đầu ra ThicMobKai-only.
 
-## Hiện có
+## Tính năng
 
-- Kéo thả pack `.zip`
-- Quét file mob / boss / model
-- Mirror toàn bộ pack gốc vào ZIP xuất ra
-- Sinh lớp `skills.yml`/`mobs.yml`/`bosses.yml` cho ThicMobKai song song với pack gốc
-- Xuất ra bản nháp `mobs.yml`, `bosses.yml`, `skills.yml`
-- Tách file riêng cho từng mob / boss giống workflow MythicMobs
-- Gợi ý lỗi thường gặp
+- Quét file `.zip` chứa mob, boss, model, skill
+- Tự nhận diện ModelEngine 4 `.bbmodel`
+- Dịch một phần mechanic skill MythicMobs sang lớp ThicMobKai
+- Sinh `mobs.yml`, `bosses.yml`, `skills.yml` và các file tách riêng cho từng mob / boss
+- Xuất gói kết quả mà không cần giữ MythicMobs trong pack đầu ra
+- Hiển thị cảnh báo khi gặp mechanic chưa có luật dịch
 
-## Bản sau
+## Cách dùng
 
-- Hỗ trợ `.rar`
-- Sửa YAML lỗi sâu hơn
-- Xuất zip cấu hình hoàn chỉnh
-- Tách riêng wizard cho ModelEngine 4 / MythicMobs
-- Nâng cấp bộ dịch skill để hỗ trợ nhiều mechanic MythicMobs hơn mà không đụng pack gốc
+1. Kéo thả pack `.zip` vào web
+2. Bấm `Quét pack`
+3. Xem báo cáo, `ThicMobKai`, `Skill map`, `Tách file`, `Sửa lỗi`
+4. Tải file xuất ra để dùng trực tiếp cho ThicMobKai
+
+## Ghi chú
+
+- Đây là bản converter ban đầu, chưa hỗ trợ toàn bộ mechanic của MythicMobs.
+- Nếu pack có mechanic chưa hỗ trợ, tool sẽ đánh dấu để nâng cấp sau.
+- Pack xuất ra được thiết kế để đi theo hướng ThicMobKai thuần, không phụ thuộc MythicMobs.

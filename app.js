@@ -14,7 +14,6 @@ let splitFilePreview = null;
 
 const ZIP_URL = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm';
 const THICMOB_SUPPORTED_TRIGGERS = ['on-spawn', 'on-damage', 'on-attack', 'custom'];
-const RAW_BACKUP_DIR = 'compat/mythicmobs';
 
 tabs.forEach((tab) => {
   tab.addEventListener('click', () => {
@@ -555,31 +554,10 @@ function buildThicMobYaml(mobs, bosses) {
   return { mobs: builtMobs.join('\n'), bosses: builtBosses.join('\n') };
 }
 
-function buildRawMythicBackup(mobs, bosses) {
-  const lines = ['# MythicMobs raw backup', 'raw-packs:'];
-  for (const mob of [...mobs, ...bosses]) {
-    lines.push(`  ${mob.id}:`);
-    lines.push(`    source-name: ${yamlScalar(mob.sourceName)}`);
-    lines.push(`    display-name: ${yamlScalar(mob.displayName)}`);
-    lines.push(`    model4-id: ${yamlScalar(mob.model || '')}`);
-    lines.push(`    kept-triggers:`);
-    const grouped = groupSkillsByTrigger(mob.skills);
-    for (const [trigger, entries] of Object.entries(grouped)) {
-      lines.push(`      ${trigger}:`);
-      for (const entry of entries) {
-        lines.push(`        - ${yamlScalar(entry.raw)}`);
-      }
-    }
-    lines.push('');
-  }
-  return lines.join('\n');
-}
-
 function buildSplitFiles(mobs, bosses) {
   const files = {};
   files['mobs/mobs.yml'] = buildThicMobYaml(mobs, []).mobs;
   files['bosses/bosses.yml'] = buildThicMobYaml([], bosses).bosses;
-  files[`${RAW_BACKUP_DIR}/mythicmobs-raw.yml`] = buildRawMythicBackup(mobs, bosses);
 
   for (const mob of mobs) {
     files[`mobs/${mob.id}.yml`] = buildEntityYaml(mob, 'mobs').join('\n');
@@ -634,7 +612,7 @@ function buildFixNotes(files, mobs, bosses) {
     }
   }
 
-  notes.push('- Skill MythicMobs được giữ nguyên trong lớp raw backup và đồng thời sinh layer ThicMobKai để hai bên không giẫm nhau.');
+  notes.push('- Skill MythicMobs được dịch sang lớp ThicMobKai; mechanic chưa hỗ trợ sẽ được đánh dấu để nâng cấp sau.');
   return notes.length ? notes.join('\n') : '- Không phát hiện lỗi lớn trong pack.';
 }
 
@@ -655,14 +633,10 @@ async function scanPack(file) {
   const bosses = [];
   const scanned = [];
   const modelCatalog = [];
-  const originalFiles = [];
-
   await Promise.all(
     Object.values(zip.files).map(async (entry) => {
       if (entry.dir) return;
       const name = normalize(entry.name);
-      const bytes = await entry.async('uint8array');
-      originalFiles.push({ path: name, data: bytes });
       if (!/\.(yml|yaml|bbmodel|json|txt)$/i.test(name)) return;
       const text = await entry.async('string');
       scanned.push(name);
@@ -718,8 +692,7 @@ async function scanPack(file) {
     '',
     `# Mob files: ${mobs.length}`,
     `# Boss files: ${bosses.length}`,
-    `# Raw backup: ${RAW_BACKUP_DIR}/mythicmobs-raw.yml`,
-    `# Original pack mirrored: ${originalFiles.length} files`,
+    '# Output: ThicMobKai-only conversion',
     '',
     ...Object.keys(splitFiles).sort().map((path) => `- ${path}`),
   ].join('\n');
@@ -740,7 +713,6 @@ async function scanPack(file) {
       2,
     ),
     bundleFiles: {
-      ...Object.fromEntries(originalFiles.map((item) => [`original-pack/${item.path}`, item.data])),
       'mobs/mobs.yml': generated.mobs,
       'bosses/bosses.yml': generated.bosses,
       ...splitFiles,
