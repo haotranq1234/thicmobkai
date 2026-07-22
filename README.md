@@ -8,6 +8,7 @@ Trang web thử nghiệm để quét pack MythicMobs + ModelEngine 4, rồi dị
 - Quét file mob / boss / model
 - Dịch skill MythicMobs phổ biến sang `skills.yml` draft của ThicMobKai
 - Xuất ra bản nháp `mobs.yml`, `bosses.yml`, `skills.yml`
+- Tách file riêng cho từng mob / boss giống workflow MythicMobs
 - Gợi ý lỗi thường gặp
 
 ## Bản sau
